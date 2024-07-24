@@ -1,15 +1,11 @@
-
-
-
 from pathlib import Path
 import os, sys
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 templatedir = os.path.join(BASE_DIR,'templates')
-sys.path.insert(0, os.path.join(BASE_DIR,'apps'))
+sys.path.insert(0, os.path.join(BASE_DIR,'app'))
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
+
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-tnl5qyu*($$ix3=zeyft+h6(#8x&wzt)5@4rjj&esbgz#oibwo'
@@ -17,7 +13,7 @@ SECRET_KEY = 'django-insecure-tnl5qyu*($$ix3=zeyft+h6(#8x&wzt)5@4rjj&esbgz#oibwo
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -29,6 +25,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'core',
 ]
 
 MIDDLEWARE = [

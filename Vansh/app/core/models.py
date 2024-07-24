@@ -44,10 +44,10 @@ class Relationship(models.Model):
         'child': 'parent',
         'spouse': 'spouse',
         'sibling': 'sibling',
-        'uncle': 'nephew',  # This needs context adjustment based on specific relationships
+        'uncle': 'nephew',  
         'aunt': 'niece',
-        'bua': 'nephew',    # Adjust as needed
-        'fufaji': 'niece',  # Adjust as needed
+        'bua': 'nephew',    
+        'fufaji': 'niece',
         'cousin': 'cousin',
         'grandparent': 'grandchild',
         'grandchild': 'grandparent',

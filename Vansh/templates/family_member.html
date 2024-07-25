@@ -1,0 +1,23 @@
+<li>
+    <div>
+        <div>{{ member.member.first_name }} {{ member.member.last_name }}</div>
+        
+        {% if member.spouses %}
+            <div class="spouses">
+                {% for spouse in member.spouses %}
+                    <div class="spouse">{{ spouse.member.first_name }} {{ spouse.member.last_name }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+        
+        {% if member.children %}
+            <div class="children">
+                <ul>
+                    {% for child in member.children %}
+                        {% include 'family_member.html' with member=child %}
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+    </div>
+</li>

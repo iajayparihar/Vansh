@@ -6,9 +6,11 @@ from .models import Relationship
 def create_reverse_relationship(sender, instance, created, **kwargs):
     if created:
         reverse_type = Relationship.RELATIONSHIP_REVERSE.get(instance.relationship_type)
-        if reverse_type:
+        
+        if reverse_type is not 'spouse':
             Relationship.objects.get_or_create(
                 from_member=instance.to_member,
                 to_member=instance.from_member,
                 relationship_type=reverse_type
+
             )

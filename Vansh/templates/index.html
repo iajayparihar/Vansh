@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% block extrahead %}
+<link rel="stylesheet" type="text/css" href="{% static 'styles.css' %}">
+{% endblock %}
+
+{% block body %}
+    <h1>Family Tree</h1>
+    <div class="tree">
+        <ul>
+            {% for member in family_tree.values %}
+                {% if not member.parents %}
+                    {% include 'family_member.html' with member=member %}
+                {% endif %}
+            {% endfor %}
+        </ul>
+    </div>
+{% endblock %}

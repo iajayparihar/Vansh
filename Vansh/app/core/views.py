@@ -62,7 +62,7 @@ def generate_family_tree_graph(family_tree):
             if parent.id not in added_nodes:
                 dot.node(str(parent.id), f"{parent.first_name} {parent.last_name}")
                 added_nodes.add(parent.id)
-            dot.edge(str(parent.id), str(member_id), label="parent")
+            # dot.edge(str(parent.id), str(member_id), label="parent")
 
         for child in data['children']:
             if child.id not in added_nodes:
@@ -70,14 +70,14 @@ def generate_family_tree_graph(family_tree):
                 added_nodes.add(child.id)
             dot.edge(str(member_id), str(child.id), label="child")
 
-    # Add spouses in a subgraph to align them horizontally
+# Add spouses in a subgraph to align them horizontally
     for member_id, data in family_tree.items():
         if data['spouses']:
             with dot.subgraph() as s:
                 s.attr(rank='same')
                 for spouse in data['spouses']:
                     s.node(str(spouse.id), f"{spouse.first_name} {spouse.last_name}")
-                    s.edge(str(member_id), str(spouse.id), label="spouse", dir="none")
+                    s.edge(str(member_id), str(spouse.id)), #, label="Pati", dir="forward"
 
     return dot
 
@@ -88,7 +88,7 @@ def family_tree_view(request):
 
     # Generate Graphviz family tree
     dot = generate_family_tree_graph(family_tree)
-    graph_path = 'family_tree.gv'
+    graph_path = 'family_tree01'
     dot.render(graph_path, format='png', cleanup=True)
 
     return JsonResponse({'family_tree_data': family_tree_data, 'graph_path': graph_path}, safe=False)

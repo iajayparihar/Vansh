@@ -60,6 +60,7 @@ def generate_family_tree_graph(family_tree, relevant_ids):
     current = family_tree
 
     while current:
+        # breakpoint()
         member = current.member
         member_id = member.id
         member_name = f"{member.first_name} {member.last_name}"
@@ -91,13 +92,18 @@ def generate_family_tree_graph(family_tree, relevant_ids):
         if current.spouses:
             with dot.subgraph() as s:
                 s.attr(rank='same')
+                first_spouse_id = None
                 for spouse in current.spouses:
                     spouse_id = spouse.member.id
                     spouse_name = f"{spouse.member.first_name} {spouse.member.last_name}"
                     if spouse_id in relevant_ids and spouse_id not in added_nodes:
                         s.node(str(spouse_id), spouse_name)
                         added_nodes.add(spouse_id)
-                    s.edge(str(member_id), str(spouse_id), label="spouse")
+
+                    if first_spouse_id is None:
+                        # Create the first spouse edge with the main member
+                        s.edge(str(member_id), str(spouse_id), label="spouse")
+                        first_spouse_id = spouse_id
 
         current = current.next
 
@@ -197,6 +203,7 @@ def get_user_family_data(user_id, head):
 def user_family_view(request, user_id):
     head = build_family_tree()
     family_data = get_user_family_data(user_id, head)
+    print(family_data)
     if 'error' in family_data:
         return JsonResponse(family_data, safe=False)
 
@@ -224,19 +231,111 @@ def user_family_view(request, user_id):
     return JsonResponse({'family_data': family_data, 'graph_path': graph_path}, safe=False)
 
 
-def family_tree_view(request):
+def filter_family_tree_by_generation(head, max_depth):
+    def traverse(node, current_depth, visited):
+        if node is None or node in visited or current_depth > max_depth:
+            return
+        visited.add(node)
+        for parent in node.parents:
+            traverse(parent, current_depth + 1, visited)
+        for child in node.children:
+            traverse(child, current_depth + 1, visited)
+        for spouse in node.spouses:
+            traverse(spouse, current_depth, visited)
+
+    visited_nodes = set()
+    traverse(head, 0, visited_nodes)
+    return visited_nodes
+
+
+
+def family_tree_view(request, generation_depth=None):
     head = build_family_tree()
-    current = head
+    if generation_depth is None:
+        generation_depth = 2  # Default depth if not provided
+    else:
+        generation_depth = int(generation_depth)
+
+    filtered_nodes = filter_family_tree_by_generation(head, generation_depth)
+    relevant_ids = {node.member.id for node in filtered_nodes}
+
     family_tree = {}
+    current = head
     while current:
-        family_tree[current.member.id] = current
+        if current in filtered_nodes:
+            family_tree[current.member.id] = current
         current = current.next
 
     family_tree_schema = FamilyTreeSchema(many=True)
     family_tree_data = family_tree_schema.dump([v for v in family_tree.values()])
 
-    dot = generate_family_tree_graph(head, {member_id for member_id in family_tree.keys()})
+    dot = generate_family_tree_graph(head, relevant_ids)
     graph_path = 'family_tree01'
     dot.render(graph_path, format='png', cleanup=True)
 
     return JsonResponse({'family_tree_data': family_tree_data, 'graph_path': graph_path}, safe=False)
+
+
+# New function to get all members in the doubly linked list from the current user.
+def get_all_members_from_user(user_id, head):
+    current = head
+    user_node = None
+
+    # Find the node for the specified user_id
+    while current:
+        if current.member.id == user_id:
+            user_node = current
+            break
+        current = current.next
+
+    if not user_node:
+        return {'error': 'User not found'}
+
+    members_list = []
+
+    # Traverse the list from the user_node forwards
+    forward_node = user_node
+    while forward_node:
+        member = forward_node.member
+        members_list.append({
+            'id': member.id,
+            'first_name': member.first_name,
+            'last_name': member.last_name,
+            'date_of_birth': member.date_of_birth,
+            'gender': member.gender,
+            'address': member.address,
+            'phone_number': member.phone_number,
+            'email': member.email,
+            'occupation': member.occupation
+        })
+        forward_node = forward_node.next
+
+    # Traverse the list from the user_node backwards
+    backward_node = user_node.prev
+    while backward_node:
+        member = backward_node.member
+        members_list.append({
+            'id': member.id,
+            'first_name': member.first_name,
+            'last_name': member.last_name,
+            'date_of_birth': member.date_of_birth,
+            'gender': member.gender,
+            'address': member.address,
+            'phone_number': member.phone_number,
+            'email': member.email,
+            'occupation': member.occupation
+        })
+        backward_node = backward_node.prev
+
+    return members_list
+
+
+# This function handles the request and returns all members in the doubly linked list from the current user.
+def user_family_list_view(request, user_id):
+    head = build_family_tree()
+    members_list = get_all_members_from_user(user_id, head)
+    if 'error' in members_list:
+        return JsonResponse(members_list, safe=False)
+
+    return JsonResponse({'members_list': members_list}, safe=False)
+

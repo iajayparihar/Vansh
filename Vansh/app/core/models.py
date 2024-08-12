@@ -68,3 +68,25 @@ class Relationship(models.Model):
     def __str__(self):
         return f'{self.from_member} is {self.relationship_type} of {self.to_member}'
 
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+
+        if self.relationship_type == 'parent' and self.from_member.gender == 'M':
+            mother_relationship = Relationship.objects.filter(
+                from_member=self.from_member,
+                relationship_type='spouse'
+            ).first()
+
+            if mother_relationship:
+                mother = mother_relationship.to_member
+                if not Relationship.objects.filter(
+                    from_member=mother,
+                    to_member=self.to_member,
+                    relationship_type='parent'
+                ).exists():
+                    # Create the mother-child relationship
+                    Relationship.objects.create(
+                        from_member=mother,
+                        to_member=self.to_member,
+                        relationship_type='parent'
+                    )
